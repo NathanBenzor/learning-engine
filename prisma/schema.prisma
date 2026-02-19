@@ -1,0 +1,67 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model LearningGoal {
+  id          String    @id @default(uuid())
+  userId      String
+  conceptKey  String
+  difficulty  Int
+  title       String
+  description String?
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+  archivedAt  DateTime?
+
+  taskPlans TaskPlan[]
+  sessions  Session[]
+}
+
+model TaskPlan {
+  id              String   @id @default(uuid())
+  goalId          String
+  orderIndex      Int
+  content         String
+  difficultyLevel Int
+  createdAt       DateTime @default(now())
+
+  goal     LearningGoal  @relation(fields: [goalId], references: [id])
+  attempts TaskAttempt[] // 👈 ADD THIS
+
+  @@unique([goalId, orderIndex])
+}
+
+model Session {
+  id          String    @id @default(uuid())
+  goalId      String
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  goal     LearningGoal  @relation(fields: [goalId], references: [id])
+  attempts TaskAttempt[]
+}
+
+model TaskAttempt {
+  id           String        @id @default(uuid())
+  sessionId    String
+  taskPlanId   String
+  submissionId String        @unique
+  response     String
+  status       AttemptStatus
+  createdAt    DateTime      @default(now())
+
+  session  Session  @relation(fields: [sessionId], references: [id])
+  taskPlan TaskPlan @relation(fields: [taskPlanId], references: [id])
+}
+
+enum AttemptStatus {
+  PENDING
+  PASSED
+  FAILED
+  EVALUATION_FAILED
+}
