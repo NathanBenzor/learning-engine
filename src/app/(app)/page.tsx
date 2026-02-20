@@ -1,8 +1,11 @@
-import { getGoalsByUser } from "../domains/goals/repository";
-import { archiveGoal } from "./actions/archiveGoal";
+import { getGoalsByUser } from "../../domains/goals/repository";
+import { archiveGoal } from "../actions/archiveGoal";
+import { getCurrentUser } from "@/domains/auth/getCurrentUser";
 
 export default async function Home() {
-  const goals = await getGoalsByUser("test-user");
+  const user = await getCurrentUser();
+  const goals = await getGoalsByUser(user.id);
+  console.log("userID: ", user.id);
 
   return (
     <ul>
