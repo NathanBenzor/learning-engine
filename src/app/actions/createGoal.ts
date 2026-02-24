@@ -2,6 +2,7 @@
 
 import { prisma } from "../../lib/prisma";
 import { getCurrentUser } from "@/domains/auth/getCurrentUser";
+import { revalidatePath } from "next/cache";
 
 export async function createGoal() {
   const user = await getCurrentUser();
@@ -14,11 +15,11 @@ export async function createGoal() {
     data: {
       userId: user.id,
       conceptKey: "go-pointers",
-      difficulty: 1,
       title: "Learn Go Pointers",
       description: "Intro to pointers",
     },
   });
+  revalidatePath("/");
 
   return goal;
 }

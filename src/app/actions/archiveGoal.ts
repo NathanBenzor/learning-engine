@@ -2,6 +2,7 @@
 
 import { prisma } from "../../lib/prisma";
 import { getCurrentUser } from "@/domains/auth/getCurrentUser";
+import { revalidatePath } from "next/cache";
 
 export async function archiveGoal(goalId: string) {
   const user = await getCurrentUser();
@@ -19,4 +20,5 @@ export async function archiveGoal(goalId: string) {
       archivedAt: new Date(),
     },
   });
+  revalidatePath("/");
 }
