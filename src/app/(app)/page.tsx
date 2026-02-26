@@ -46,15 +46,30 @@ export default async function Home() {
           </li>
         ))}
       </ul>
-
+      {/* <div class="mx-auto"> */}
       <form
-        action={async () => {
+        action={async (formData) => {
           "use server";
-          await createGoal();
+          await createGoal(
+            formData.get("title") as string,
+            formData.get("description") as string,
+            Number(formData.get("difficulty")),
+          );
         }}
       >
+        <input name="title" placeholder="Goal title" required />
+        <textarea name="description" placeholder="What do you want to learn?" />
+        <input
+          name="difficulty"
+          type="number"
+          min="1"
+          max="5"
+          defaultValue={3}
+          required
+        />
         <button type="submit">Create Goal</button>
       </form>
+      {/* </div> */}
     </>
   );
 }
