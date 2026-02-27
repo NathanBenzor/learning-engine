@@ -1,6 +1,10 @@
+import { getCurrentUser } from "@/domains/auth/getCurrentUser";
+import { getSessionState } from "@/domains/sessions/getSessionState";
 import { submitTask } from "@/app/actions/submitTask";
-import { prisma } from "../../../lib/prisma";
-import { evaluateSessionAction } from "@/app/actions/evaluateSession";
+import { evaluateSession } from "@/domains/sessions/evaluateSession";
+import { redirect } from "next/navigation";
+import Link from "next/link";
+import { logout } from "@/app/actions/logout";
 
 export default async function SessionPage({
   params,
@@ -9,53 +13,117 @@ export default async function SessionPage({
 }) {
   const { id } = await params;
 
-  const session = await prisma.session.findUnique({
-    where: { id },
-    include: {
-      taskPlan: {
-        include: {
-          tasks: {
-            orderBy: { orderIndex: "asc" },
-          },
-        },
-      },
-    },
-  });
-
-  if (!session) {
-    return <div>Session not found</div>;
+  const user = await getCurrentUser();
+  if (!user) {
+    redirect("/login");
   }
-  // hardcoded the first task
-  const firstTask = session.taskPlan?.tasks?.[0];
-  console.log("first task ", firstTask);
+
+  const state = await getSessionState(id, user.id);
+
+  if (state.isComplete) {
+    const result = await evaluateSession(id);
+
+    return (
+      <div className="min-h-screen bg-zinc-950 p-8">
+        <div className="max-w-2xl mx-auto bg-zinc-900 border border-zinc-800 rounded-xl p-8 space-y-6">
+          <h1 className="text-3xl font-bold text-white">Session Complete</h1>
+
+          <div className="bg-zinc-800 p-4 rounded-lg">
+            <p className="text-zinc-300">{result.summary}</p>
+          </div>
+
+          <div className="space-y-3">
+            <h2 className="text-lg font-semibold text-white">Task Breakdown</h2>
+
+            {result.results.map((r) => (
+              <div
+                key={r.taskIndex}
+                className="flex justify-between items-center bg-zinc-800 px-4 py-3 rounded-md border border-zinc-700"
+              >
+                <span className="text-zinc-300">Task {r.taskIndex + 1}</span>
+
+                <span
+                  className={
+                    r.correct
+                      ? "text-green-400 font-medium"
+                      : "text-red-400 font-medium"
+                  }
+                >
+                  {r.correct ? "Correct" : "Incorrect"}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <div className="pt-4">
+            <Link
+              href="/"
+              className="inline-block px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg"
+            >
+              Back to Dashboard
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const task = state.currentTask;
+
   return (
-    <div>
-      <h1>Session Started</h1>
-      <p>{firstTask?.content}</p>
-      {/* we need a place to answer the question and a form submit using a server action
-        so that we can update the db with task attempt and content for answer */}
-      <form
-        action={async (formData) => {
-          "use server";
-          await submitTask(
-            session.id,
-            firstTask.id,
-            formData.get("answer") as string,
-          );
-        }}
-      >
-        <input name="answer" />
-        <button type="submit">Submit</button>
-      </form>
-      <form
-        action={async () => {
-          "use server";
-          const result = await evaluateSessionAction(id);
-          console.log(result);
-        }}
-      >
-        <button type="submit">Test Evaluation</button>
-      </form>
+    <div className="min-h-screen bg-zinc-950 p-8">
+      <div className="max-w-2xl mx-auto bg-zinc-900 border border-zinc-800 rounded-xl p-8 space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold text-white">Learning Session</h1>
+          <form action={logout}>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-md"
+            >
+              Logout
+            </button>
+          </form>
+        </div>
+        <div className="bg-zinc-800 p-4 rounded-lg border border-zinc-700">
+          <p className="text-zinc-200">{task?.content}</p>
+        </div>
+
+        <form
+          action={async (formData) => {
+            "use server";
+            await submitTask(
+              state.session.id,
+              task!.id,
+              formData.get("answer") as string,
+            );
+          }}
+          className="space-y-4"
+        >
+          <textarea
+            name="answer"
+            required
+            placeholder="Write your answer here..."
+            className="w-full px-4 py-3 bg-zinc-800 border border-zinc-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+
+          <button
+            type="submit"
+            className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg"
+          >
+            Submit Answer
+          </button>
+        </form>
+        <div className="flex justify-between align-right">
+          <div className="pt-4">
+            <Link
+              href="/"
+              className="inline-block px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg"
+            >
+              Back to Dashboard
+            </Link>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
