@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/prisma";
-import { AttemptStatus } from "@prisma/client";
 
 export async function getSessionState(sessionId: string, userId: string) {
+  console.log("sessionId in getSessionState:", sessionId);
+  console.log("typeof sessionId:", typeof sessionId);
   const session = await prisma.session.findUnique({
     where: { id: sessionId },
     include: {
@@ -27,39 +28,12 @@ export async function getSessionState(sessionId: string, userId: string) {
   const tasks = session.taskPlan.tasks;
   const attempts = session.attempts;
 
-  // Group attempts by taskId
-  const attemptsByTask = new Map<string, typeof attempts>();
+  // 🔥 First task with no attempt becomes current
+  const currentTask = tasks.find((task) => {
+    return !attempts.some((a) => a.taskId === task.id);
+  });
 
-  for (const attempt of attempts) {
-    const list = attemptsByTask.get(attempt.taskId) ?? [];
-    list.push(attempt);
-    attemptsByTask.set(attempt.taskId, list);
-  }
-
-  let currentTask = null;
-  let completedCount = 0;
-
-  for (const task of tasks) {
-    const taskAttempts = attemptsByTask.get(task.id) ?? [];
-
-    const passed = taskAttempts.some((a) => a.status === AttemptStatus.PASSED);
-
-    if (passed) {
-      completedCount++;
-      continue;
-    }
-
-    if (taskAttempts.length >= 3) {
-      // exhausted (neutral skip)
-      completedCount++;
-      continue;
-    }
-
-    currentTask = task;
-    break;
-  }
-
-  const isComplete = currentTask === null;
+  const isComplete = !currentTask;
 
   // 🔒 Mark completion once
   if (isComplete && !session.completedAt) {
@@ -70,12 +44,8 @@ export async function getSessionState(sessionId: string, userId: string) {
   }
 
   return {
-    sessionId: session.id,
-    currentTask,
+    session,
+    currentTask: currentTask ?? null,
     isComplete,
-    progress: {
-      total: tasks.length,
-      completed: completedCount,
-    },
   };
 }

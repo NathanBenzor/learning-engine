@@ -69,6 +69,10 @@ model Session {
   startedAt   DateTime @default(now())
   completedAt DateTime?
 
+  // 🔥 NEW
+  evaluation  Json?
+  passed      Boolean?
+
   goal        LearningGoal @relation(fields: [goalId], references: [id])
   taskPlan    TaskPlan     @relation(fields: [taskPlanId], references: [id])
   user        User         @relation(fields: [userId], references: [id])
