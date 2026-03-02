@@ -10,6 +10,8 @@ export type SessionEvaluation = {
   results: {
     taskIndex: number;
     correct: boolean;
+    explanation: string;
+    improvement?: string;
   }[];
 };
 
@@ -68,15 +70,28 @@ export async function evaluateSession(
         content: `
 You are evaluating a completed learning session.
 
-Return ONLY valid JSON:
+Return ONLY valid JSON in this exact format:
 
 {
   "passed": boolean,
   "summary": string,
   "results": [
-    { "taskIndex": number, "correct": boolean }
+    {
+      "taskIndex": number,
+      "correct": boolean,
+      "explanation": string,
+      "improvement": string
+    }
   ]
 }
+
+Rules:
+- explanation must clearly explain why the answer was correct or incorrect.
+- explanation must be detailed with examples
+- If incorrect, improvement must describe what was missing or how to improve.
+- If correct, improvement may reinforce the concept.
+- Keep explanations concise but meaningful.
+- Do not include markdown.
 `,
       },
       {

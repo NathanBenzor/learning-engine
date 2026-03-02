@@ -4,15 +4,17 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-/**
- * Shape we expect back from the AI.
- */
 type GeneratedTaskPlan = {
   tasks: {
     orderIndex: number;
-    content: string;
+    content: string; // will be a QUESTION
   }[];
 };
+
+function isQuestion(s: string) {
+  const t = s.trim();
+  return t.length > 0 && t.endsWith("?") && !/^task\s*:/i.test(t);
+}
 
 export async function generateTaskPlan({
   title,
@@ -31,7 +33,7 @@ export async function generateTaskPlan({
       {
         role: "system",
         content: `
-You are generating a structured learning plan.
+You generate learning QUESTIONS (not tasks).
 
 Return ONLY valid JSON in this exact format:
 
@@ -45,11 +47,12 @@ Return ONLY valid JSON in this exact format:
   ]
 }
 
-Requirements:
-- Exactly 5 tasks
-- orderIndex must be 0 through 4
-- Tasks should progressively increase in difficulty
-- No extra text outside JSON
+Rules:
+- Generate exactly 5 QUESTIONS.
+- Each content must be a single, answerable question that ends with "?".
+- Do NOT include multi-step instructions (no "do X then Y").
+- Do NOT prefix with "Task:" or "Question:".
+- Progress from easier to harder.
 `,
       },
       {
@@ -57,41 +60,36 @@ Requirements:
         content: `
 Goal Title: ${title}
 Description: ${description}
-Difficulty Level (1-5): ${difficulty}
+Difficulty (1-5): ${difficulty}
 
-Generate exactly 5 progressively challenging learning tasks.
+Generate 5 progressively challenging questions that test understanding of this topic.
 `,
       },
     ],
   });
 
   const raw = completion.choices[0].message.content;
-
-  if (!raw) {
-    throw new Error("OpenAI returned empty response");
-  }
+  if (!raw) throw new Error("OpenAI returned empty response");
 
   const parsed = JSON.parse(raw) as GeneratedTaskPlan;
 
-  // Runtime validation (important)
   if (
     !parsed.tasks ||
     !Array.isArray(parsed.tasks) ||
     parsed.tasks.length !== 5
   ) {
-    throw new Error("AI did not return exactly 5 tasks");
+    throw new Error("AI did not return exactly 5 items");
   }
 
-  parsed.tasks.forEach((task, index) => {
-    if (
-      typeof task.orderIndex !== "number" ||
-      typeof task.content !== "string"
-    ) {
-      throw new Error("AI returned malformed task structure");
+  parsed.tasks.forEach((q, index) => {
+    if (typeof q.orderIndex !== "number" || typeof q.content !== "string") {
+      throw new Error("AI returned malformed question structure");
     }
-
-    if (task.orderIndex !== index) {
+    if (q.orderIndex !== index) {
       throw new Error("AI returned incorrect orderIndex sequence");
+    }
+    if (!isQuestion(q.content)) {
+      throw new Error(`AI returned a non-question at index ${index}`);
     }
   });
 
