@@ -38,19 +38,43 @@ export default async function SessionPage({
             {result.results.map((r) => (
               <div
                 key={r.taskIndex}
-                className="flex justify-between items-center bg-zinc-800 px-4 py-3 rounded-md border border-zinc-700"
+                className="bg-zinc-800 border border-zinc-700 rounded-md"
               >
-                <span className="text-zinc-300">Task {r.taskIndex + 1}</span>
+                <details className="group">
+                  <summary className="cursor-pointer flex justify-between items-center px-4 py-3">
+                    <span className="text-zinc-300">
+                      Task {r.taskIndex + 1}
+                    </span>
 
-                <span
-                  className={
-                    r.correct
-                      ? "text-green-400 font-medium"
-                      : "text-red-400 font-medium"
-                  }
-                >
-                  {r.correct ? "Correct" : "Incorrect"}
-                </span>
+                    <span
+                      className={
+                        r.correct
+                          ? "text-green-400 font-medium"
+                          : "text-red-400 font-medium"
+                      }
+                    >
+                      {r.correct ? "Correct" : "Incorrect"}
+                    </span>
+                  </summary>
+
+                  <div className="px-4 pb-4 space-y-2 text-sm text-zinc-300">
+                    <p>
+                      <span className="font-semibold text-white">
+                        Explanation:
+                      </span>{" "}
+                      {r.explanation}
+                    </p>
+
+                    {!r.correct && r.improvement && (
+                      <p>
+                        <span className="font-semibold text-white">
+                          How to Improve:
+                        </span>{" "}
+                        {r.improvement}
+                      </p>
+                    )}
+                  </div>
+                </details>
               </div>
             ))}
           </div>
