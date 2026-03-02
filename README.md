@@ -1,36 +1,145 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+🚀 Learning Engine
 
-## Getting Started
+An AI-assisted learning platform built with Next.js, TypeScript, Prisma, PostgreSQL, Supabase Auth, and OpenAI.
 
-First, run the development server:
+Learning Engine demonstrates how to integrate AI into a full-stack application using deterministic backend logic, idempotent evaluation patterns, and cost-controlled API usage.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+🎯 Overview
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Learning Engine allows users to:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Create structured learning goals
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Generate AI-created task plans (fixed 5 tasks)
 
-## Learn More
+Complete guided learning sessions
 
-To learn more about Next.js, take a look at the following resources:
+Receive AI evaluation summaries
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Persist evaluation results safely and consistently
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The system separates deterministic execution from AI orchestration to maintain reliability and architectural clarity.
 
-## Deploy on Vercel
+🏗 Tech Stack
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Frontend / Fullstack
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Next.js (App Router)
+
+Server Components + Server Actions
+
+TypeScript
+
+Tailwind CSS (dark theme)
+
+Backend
+
+PostgreSQL
+
+Prisma ORM
+
+Supabase Auth (browser + server clients)
+
+AI Layer
+
+OpenAI API
+
+Structured JSON task generation
+
+Structured JSON session evaluation
+
+Persisted results to prevent duplicate calls
+
+🧠 Architectural Highlights
+Deterministic Session Engine
+
+Task progression is derived entirely from persisted database state.
+No client-side state machine is required.
+
+AI at the Boundaries
+
+AI is used only for:
+
+Task plan generation
+
+Final session evaluation
+
+All execution logic remains server-controlled and predictable.
+
+Idempotent Evaluation
+
+Evaluation results are stored in the database to:
+
+Prevent duplicate OpenAI calls
+
+Prevent repeated billing on refresh
+
+Guarantee consistent results across renders
+
+Typed JSON Rehydration
+
+AI responses are:
+
+Parsed and validated
+
+Cast to strict TypeScript types
+
+Persisted as JSON
+
+Safely rehydrated on subsequent requests
+
+🔁 Core Flow
+
+User logs in via Supabase Auth
+
+User creates a learning goal
+
+OpenAI generates a fixed-length (5 task) plan
+
+Tasks are stored in a database transaction
+
+User completes each task once
+
+Session is marked complete
+
+OpenAI evaluates the session
+
+Evaluation is persisted and reused
+
+🧩 What This Project Demonstrates
+
+Full-stack TypeScript proficiency
+
+Clean domain-driven layering
+
+Server-first rendering patterns
+
+Secure authentication integration
+
+Structured AI orchestration
+
+Cost-aware API design
+
+Idempotent backend architecture
+
+Production-minded thinking
+
+🚧 Future Enhancements
+
+Multi-attempt logic (up to 3 attempts per task)
+
+Per-task AI grading
+
+Adaptive difficulty system
+
+Session history dashboard
+
+RAG-based contextual knowledge
+
+Scoring beyond simple pass/fail
+
+🏁 Purpose
+
+Learning Engine was built as a focused engineering exercise to strengthen backend architecture and AI integration skills in a production-style environment.
+
+It prioritizes clarity, determinism, and disciplined system design over feature sprawl.
